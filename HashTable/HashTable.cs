@@ -13,7 +13,7 @@ public class HashTable<K, V>
     /// </summary>
     /// <typeparam name="K">Тип ключа.</typeparam>
     /// <typeparam name="V">Тип значения.</typeparam>
-    private class HashTableNode<K, V>
+    private class HashTableNode
     {
         /// <summary>
         ///     Ключ.
@@ -28,7 +28,7 @@ public class HashTable<K, V>
         /// <summary>
         ///     Следующий узел.
         /// </summary>
-        public HashTableNode<K, V> NextNode;
+        public HashTableNode NextNode;
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public class HashTable<K, V>
     /// <summary>
     ///     Массив узлов, содержащих данные.
     /// </summary>
-    private HashTableNode<K, V>[] buckets;
+    private HashTableNode[] buckets;
 
     /// <summary>
     ///     Инициализирует хэш-таблицу.
@@ -53,7 +53,7 @@ public class HashTable<K, V>
     {
         Size = 0;
         numBuckets = 16;
-        buckets = new HashTableNode<K, V>[numBuckets];
+        buckets = new HashTableNode[numBuckets];
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class HashTable<K, V>
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
-        HashTableNode<K, V> currentNode = buckets[bucketIndex];
+        HashTableNode currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
@@ -93,7 +93,7 @@ public class HashTable<K, V>
         if (currentNode != null)
             return;
 
-        HashTableNode<K, V> newHead = new();
+        HashTableNode newHead = new();
         newHead.Key = key;
         newHead.Value = value;
         newHead.NextNode = buckets[bucketIndex];
@@ -113,7 +113,7 @@ public class HashTable<K, V>
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
-        HashTableNode<K, V> currentNode = buckets[bucketIndex];
+        HashTableNode currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
@@ -136,7 +136,7 @@ public class HashTable<K, V>
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
-        HashTableNode<K, V> currentNode = buckets[bucketIndex];
+        HashTableNode currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
@@ -159,8 +159,8 @@ public class HashTable<K, V>
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
-        HashTableNode<K, V> previousNode = null;
-        HashTableNode<K, V> currentNode = buckets[bucketIndex];
+        HashTableNode previousNode = null;
+        HashTableNode currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
@@ -203,7 +203,7 @@ public class HashTable<K, V>
     {
         for (int i = 0; i < numBuckets; ++i)
         {
-            HashTableNode<K, V> node = buckets[i];
+            HashTableNode node = buckets[i];
 
             while (node != null)
             {

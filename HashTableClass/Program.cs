@@ -27,7 +27,7 @@ class Program
         table["six"] = 6;
         table["seven"] = 7;
         table["eight"] = 8;
-        table["nein"] = 9;
+        table["nine"] = 9;
 
         Console.WriteLine("Size = {0}", table.Size);
 

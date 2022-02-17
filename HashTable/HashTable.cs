@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+namespace HashTableClass;
+
 /// <summary>
 ///     Реализация хэш-таблицы.
 /// </summary>

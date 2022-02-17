@@ -196,9 +196,9 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// 
+    /// Возвращает перечислитель хэш-таблицы.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>Перечислитель.</returns>
     public IEnumerator<(K Key, V Value)> GetEnumerator()
     {
         for (int i = 0; i < numBuckets; ++i)

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+namespace HashTableClass;
+
 /// <summary>
 ///     Реализация хэш-таблицы.
 /// </summary>
@@ -13,22 +15,22 @@ public class HashTable<K, V>
     /// </summary>
     /// <typeparam name="K">Тип ключа.</typeparam>
     /// <typeparam name="V">Тип значения.</typeparam>
-    private class HashTableNode<K, V>
+    private class HashTableNode
     {
         /// <summary>
         ///     Ключ.
         /// </summary>
-        public K Key;
+        public K? Key;
 
         /// <summary>
         ///     Значение.
         /// </summary>
-        public V Value;
+        public V? Value;
 
         /// <summary>
         ///     Следующий узел.
         /// </summary>
-        public HashTableNode<K, V> NextNode;
+        public HashTableNode? NextNode;
     }
 
     /// <summary>
@@ -42,9 +44,19 @@ public class HashTable<K, V>
     private int numBuckets;
 
     /// <summary>
-    ///     Массив узлов, содержащих данные.
+    ///     Массив цепей узлов, содержащих данные.
     /// </summary>
-    private HashTableNode<K, V>[] buckets;
+    private HashTableNode?[]? buckets;
+
+    /// <summary>
+    ///     Коэффициент загрузки, при котором массив цепей увеличивается в два раза.
+    /// </summary>
+    private readonly float loadFactor = 0.75f;
+
+    /// <summary>
+    ///     Начальный размер массива цепей.
+    /// </summary>
+    private readonly int initialBuckets = 16;
 
     /// <summary>
     ///     Инициализирует хэш-таблицу.
@@ -52,18 +64,18 @@ public class HashTable<K, V>
     public HashTable()
     {
         Size = 0;
-        numBuckets = 16;
-        buckets = new HashTableNode<K, V>[numBuckets];
+        numBuckets = 0;
     }
 
     /// <summary>
     ///     Высчитывает индекс ключа в массиве узлов.
+    ///     Ожидается, что <paramref name="key"/> не `null`.
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Индекс ключа.</returns>
     private int GetKeyIndex(K key)
     {
-        int hash = key.GetHashCode() % numBuckets;
+        int hash = key!.GetHashCode() % numBuckets;
         return hash >= 0 ? hash : -hash;
     }
 
@@ -72,16 +84,25 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <param name="value">Значение.</param>
-    public void Add(K key, V value)
+    public void Add(K key, V? value)
     {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
+        if (buckets == null)
+        {
+            numBuckets = initialBuckets;
+            buckets = new HashTableNode[numBuckets];
+        }
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
-        HashTableNode<K, V> currentNode = buckets[bucketIndex];
+        HashTableNode? currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
-            if (currentNode.Key.GetHashCode() == keyHash && currentNode.Key.Equals(key))
+            if (currentNode.Key!.GetHashCode() == keyHash && currentNode.Key.Equals(key))
             {
                 currentNode.Value = value;
                 break;
@@ -93,14 +114,50 @@ public class HashTable<K, V>
         if (currentNode != null)
             return;
 
-        HashTableNode<K, V> newHead = new();
-        newHead.Key = key;
-        newHead.Value = value;
-        newHead.NextNode = buckets[bucketIndex];
+        ++Size;
+
+        if (Size / numBuckets >= loadFactor)
+        {
+            GrowHashTable();
+            bucketIndex = GetKeyIndex(key);
+        }
+
+        HashTableNode newHead = new()
+        {
+            Key = key,
+            Value = value,
+            NextNode = buckets[bucketIndex]
+        };
 
         buckets[bucketIndex] = newHead;
+    }
 
-        ++Size;
+    /// <summary>
+    /// Увеличивает размер хэш-таблицы.
+    /// </summary>
+    private void GrowHashTable()
+    {
+        HashTableNode?[] oldBuckets = buckets!;
+
+        numBuckets *= 2;
+        buckets = new HashTableNode[numBuckets];
+
+        foreach (HashTableNode? node in oldBuckets)
+        {
+            HashTableNode? currentNode = node;
+
+            while (currentNode != null)
+            {
+                HashTableNode? nextNode = currentNode.NextNode;
+
+                int bucketIndex = GetKeyIndex(currentNode.Key!);
+
+                currentNode.NextNode = buckets[bucketIndex];
+                buckets[bucketIndex] = currentNode;
+
+                currentNode = nextNode;
+            }
+        }
     }
 
     /// <summary>
@@ -108,22 +165,28 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение под ключом.</returns>
-    public V Get(K key)
+    public V? Get(K key)
     {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
+        if (buckets == null)
+            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
-        HashTableNode<K, V> currentNode = buckets[bucketIndex];
+        HashTableNode? currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
-            if (currentNode.Key.GetHashCode() == keyHash && currentNode.Key.Equals(key))
+            if (currentNode.Key!.GetHashCode() == keyHash && currentNode.Key.Equals(key))
                 return currentNode.Value;
 
             currentNode = currentNode.NextNode;
         }
 
-        throw new ArgumentOutOfRangeException("Ключ не принадлежит хэш-таблице.");
+        throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
     }
 
     /// <summary>
@@ -133,14 +196,20 @@ public class HashTable<K, V>
     /// <returns>`true` если существует, иначе `false`.</returns>
     public bool Exists(K key)
     {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
+        if (buckets == null)
+            return false;
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
-        HashTableNode<K, V> currentNode = buckets[bucketIndex];
+        HashTableNode? currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
-            if (currentNode.Key.GetHashCode() == keyHash && currentNode.Key.Equals(key))
+            if (currentNode.Key!.GetHashCode() == keyHash && currentNode.Key.Equals(key))
                 return true;
 
             currentNode = currentNode.NextNode;
@@ -154,17 +223,23 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение по ключу.</returns>
-    public V Remove(K key)
+    public V? Remove(K key)
     {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
+        if (buckets == null)
+            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
-        HashTableNode<K, V> previousNode = null;
-        HashTableNode<K, V> currentNode = buckets[bucketIndex];
+        HashTableNode? previousNode = null;
+        HashTableNode? currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
-            if (currentNode.Key.GetHashCode() == keyHash && currentNode.Key.Equals(key))
+            if (currentNode.Key!.GetHashCode() == keyHash && currentNode.Key.Equals(key))
                 break;
 
             previousNode = currentNode;
@@ -172,14 +247,14 @@ public class HashTable<K, V>
         }
 
         if (currentNode == null)
-            throw new ArgumentOutOfRangeException("Ключ не принадлежит хэш-таблице.");
-
-        if (previousNode == null)
-            buckets[bucketIndex] = buckets[bucketIndex].NextNode;
-        else
-            previousNode.NextNode = currentNode.NextNode;
+            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
 
         --Size;
+
+        if (previousNode == null)
+            buckets[bucketIndex] = buckets[bucketIndex]!.NextNode;
+        else
+            previousNode.NextNode = currentNode.NextNode;
 
         return currentNode.Value;
     }
@@ -189,7 +264,7 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение по ключу.</returns>
-    public V this[K key]
+    public V? this[K key]
     {
         get => Get(key);
         set => Add(key, value);
@@ -199,15 +274,15 @@ public class HashTable<K, V>
     ///     Возвращает перечислитель хэш-таблицы.
     /// </summary>
     /// <returns>Перечислитель.</returns>
-    public IEnumerator<(K Key, V Value)> GetEnumerator()
+    public IEnumerator<(K Key, V? Value)> GetEnumerator()
     {
         for (int i = 0; i < numBuckets; ++i)
         {
-            HashTableNode<K, V> node = buckets[i];
+            HashTableNode? node = buckets![i];
 
             while (node != null)
             {
-                yield return (node.Key, node.Value);
+                yield return (node.Key!, node.Value);
                 node = node.NextNode;
             }
         }

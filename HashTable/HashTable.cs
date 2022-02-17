@@ -44,9 +44,19 @@ public class HashTable<K, V>
     private int numBuckets;
 
     /// <summary>
-    ///     Массив узлов, содержащих данные.
+    ///     Массив цепей узлов, содержащих данные.
     /// </summary>
-    private HashTableNode?[] buckets;
+    private HashTableNode?[]? buckets;
+
+    /// <summary>
+    ///     Коэффициент загрузки, при котором массив цепей увеличивается в два раза.
+    /// </summary>
+    private readonly float loadFactor = 0.75f;
+
+    /// <summary>
+    ///     Начальный размер массива цепей.
+    /// </summary>
+    private readonly int initialBuckets = 16;
 
     /// <summary>
     ///     Инициализирует хэш-таблицу.
@@ -54,8 +64,7 @@ public class HashTable<K, V>
     public HashTable()
     {
         Size = 0;
-        numBuckets = 16;
-        buckets = new HashTableNode[numBuckets];
+        numBuckets = 0;
     }
 
     /// <summary>
@@ -80,6 +89,12 @@ public class HashTable<K, V>
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
 
+        if (buckets == null)
+        {
+            numBuckets = initialBuckets;
+            buckets = new HashTableNode[numBuckets];
+        }
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
@@ -99,6 +114,14 @@ public class HashTable<K, V>
         if (currentNode != null)
             return;
 
+        ++Size;
+
+        if (Size / numBuckets >= loadFactor)
+        {
+            GrowHashTable();
+            bucketIndex = GetKeyIndex(key);
+        }
+
         HashTableNode newHead = new()
         {
             Key = key,
@@ -107,8 +130,34 @@ public class HashTable<K, V>
         };
 
         buckets[bucketIndex] = newHead;
+    }
 
-        ++Size;
+    /// <summary>
+    /// Увеличивает размер хэш-таблицы.
+    /// </summary>
+    private void GrowHashTable()
+    {
+        HashTableNode?[] oldBuckets = buckets!;
+
+        numBuckets *= 2;
+        buckets = new HashTableNode[numBuckets];
+
+        foreach (HashTableNode? node in oldBuckets)
+        {
+            HashTableNode? currentNode = node;
+
+            while (currentNode != null)
+            {
+                HashTableNode? nextNode = currentNode.NextNode;
+
+                int bucketIndex = GetKeyIndex(currentNode.Key!);
+
+                currentNode.NextNode = buckets[bucketIndex];
+                buckets[bucketIndex] = currentNode;
+
+                currentNode = nextNode;
+            }
+        }
     }
 
     /// <summary>
@@ -120,6 +169,9 @@ public class HashTable<K, V>
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
+        if (buckets == null)
+            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
 
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
@@ -147,6 +199,9 @@ public class HashTable<K, V>
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
 
+        if (buckets == null)
+            return false;
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
@@ -173,6 +228,9 @@ public class HashTable<K, V>
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
 
+        if (buckets == null)
+            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
@@ -191,12 +249,12 @@ public class HashTable<K, V>
         if (currentNode == null)
             throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
 
+        --Size;
+
         if (previousNode == null)
             buckets[bucketIndex] = buckets[bucketIndex]!.NextNode;
         else
             previousNode.NextNode = currentNode.NextNode;
-
-        --Size;
 
         return currentNode.Value;
     }
@@ -220,7 +278,7 @@ public class HashTable<K, V>
     {
         for (int i = 0; i < numBuckets; ++i)
         {
-            HashTableNode? node = buckets[i];
+            HashTableNode? node = buckets![i];
 
             while (node != null)
             {

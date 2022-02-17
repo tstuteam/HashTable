@@ -74,6 +74,9 @@ public class HashTable<K, V>
     /// <param name="value">Значение.</param>
     public void Add(K key, V value)
     {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
@@ -112,6 +115,9 @@ public class HashTable<K, V>
     /// <returns>Значение под ключом.</returns>
     public V Get(K key)
     {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
@@ -125,7 +131,7 @@ public class HashTable<K, V>
             currentNode = currentNode.NextNode;
         }
 
-        throw new ArgumentOutOfRangeException("Ключ не принадлежит хэш-таблице.");
+        throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
     }
 
     /// <summary>
@@ -135,6 +141,9 @@ public class HashTable<K, V>
     /// <returns>`true` если существует, иначе `false`.</returns>
     public bool Exists(K key)
     {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
@@ -158,6 +167,9 @@ public class HashTable<K, V>
     /// <returns>Значение по ключу.</returns>
     public V Remove(K key)
     {
+        if (key == null)
+            throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
+
         int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
 
@@ -174,7 +186,7 @@ public class HashTable<K, V>
         }
 
         if (currentNode == null)
-            throw new ArgumentOutOfRangeException("Ключ не принадлежит хэш-таблице.");
+            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
 
         if (previousNode == null)
             buckets[bucketIndex] = buckets[bucketIndex].NextNode;

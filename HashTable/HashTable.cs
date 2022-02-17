@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace HashTableClass;
+﻿namespace HashTableClass;
 
 /// <summary>
 ///     Реализация хэш-таблицы.
@@ -13,8 +10,6 @@ public class HashTable<K, V>
     /// <summary>
     ///     Узел, содержащий данные.
     /// </summary>
-    /// <typeparam name="K">Тип ключа.</typeparam>
-    /// <typeparam name="V">Тип значения.</typeparam>
     private class HashTableNode
     {
         /// <summary>
@@ -133,7 +128,7 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// Увеличивает размер хэш-таблицы.
+    ///     Увеличивает размер хэш-таблицы.
     /// </summary>
     private void GrowHashTable()
     {

@@ -2,52 +2,52 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// Реализация хэш-таблицы.
+///     Реализация хэш-таблицы.
 /// </summary>
 /// <typeparam name="K">Тип ключей.</typeparam>
 /// <typeparam name="V">Тип значений.</typeparam>
 public class HashTable<K, V>
 {
     /// <summary>
-    /// Узел, содержащий данные.
+    ///     Узел, содержащий данные.
     /// </summary>
     /// <typeparam name="K">Тип ключа.</typeparam>
     /// <typeparam name="V">Тип значения.</typeparam>
     private class HashTableNode<K, V>
     {
         /// <summary>
-        /// Ключ.
+        ///     Ключ.
         /// </summary>
         public K Key;
 
         /// <summary>
-        /// Значение.
+        ///     Значение.
         /// </summary>
         public V Value;
 
         /// <summary>
-        /// Следующий узел.
+        ///     Следующий узел.
         /// </summary>
         public HashTableNode<K, V> NextNode;
     }
 
     /// <summary>
-    /// Количество элементов в хэш-таблице.
+    ///     Количество элементов в хэш-таблице.
     /// </summary>
     public int Size { private set; get; }
 
     /// <summary>
-    /// Количество цепей узлов.
+    ///     Количество цепей узлов.
     /// </summary>
     private int numBuckets;
 
     /// <summary>
-    /// Массив узлов, содержащих данные.
+    ///     Массив узлов, содержащих данные.
     /// </summary>
     private HashTableNode<K, V>[] buckets;
 
     /// <summary>
-    /// Инициализирует хэш-таблицу.
+    ///     Инициализирует хэш-таблицу.
     /// </summary>
     public HashTable()
     {
@@ -57,7 +57,7 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// Высчитывает индекс ключа в массиве узлов.
+    ///     Высчитывает индекс ключа в массиве узлов.
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Индекс ключа.</returns>
@@ -68,7 +68,7 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// Добавляет новый элемент в хэш-таблицу или перезаписывает его, если ключ уже записан.
+    ///     Добавляет новый элемент в хэш-таблицу или перезаписывает его, если ключ уже записан.
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <param name="value">Значение.</param>
@@ -104,7 +104,7 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// Возвращает элемент по ключу.
+    ///     Возвращает элемент по ключу.
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение под ключом.</returns>
@@ -127,7 +127,7 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// Возвращает, существует ли элемент по ключу.
+    ///     Возвращает, существует ли элемент по ключу.
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>`true` если существует, иначе `false`.</returns>
@@ -150,7 +150,7 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// Удаляет элемент по ключу и возвращает его значение.
+    ///     Удаляет элемент по ключу и возвращает его значение.
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение по ключу.</returns>
@@ -185,7 +185,7 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// Индексатор хэш-таблицы.
+    ///     Индексатор хэш-таблицы.
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение по ключу.</returns>
@@ -196,7 +196,7 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    /// Возвращает перечислитель хэш-таблицы.
+    ///     Возвращает перечислитель хэш-таблицы.
     /// </summary>
     /// <returns>Перечислитель.</returns>
     public IEnumerator<(K Key, V Value)> GetEnumerator()

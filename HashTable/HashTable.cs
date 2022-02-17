@@ -93,10 +93,12 @@ public class HashTable<K, V>
         if (currentNode != null)
             return;
 
-        HashTableNode newHead = new();
-        newHead.Key = key;
-        newHead.Value = value;
-        newHead.NextNode = buckets[bucketIndex];
+        HashTableNode newHead = new()
+        {
+            Key = key,
+            Value = value,
+            NextNode = buckets[bucketIndex]
+        };
 
         buckets[bucketIndex] = newHead;
 

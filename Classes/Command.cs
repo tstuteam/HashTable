@@ -29,8 +29,8 @@ public class Command
     /// <summary>
     ///     Инициализирует команду.
     /// </summary>
-    /// <param name="handler">Обработчик команды.</param>
     /// <param name="prototype">Прототип команды.</param>
+    /// <param name="handler">Обработчик команды.</param>
     /// <param name="description">Описание команды.</param>
     /// <exception cref="ArgumentNullException">Вызывается, когда обработчик равен `null`.</exception>
     public Command(string prototype, CommandHandler handler, string description)

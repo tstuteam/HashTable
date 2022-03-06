@@ -39,6 +39,7 @@ static partial class Program
         if (equalsSignAt == -1)
         {
             Console.WriteLine("Выражение должно иметь вид <key>=<value>.\n");
+            return;
         }
 
         string key = expression.Substring(0, equalsSignAt);
@@ -46,6 +47,7 @@ static partial class Program
         if (key == "")
         {
             Console.WriteLine("Ключ не может быть пустым.\n");
+            return;
         }
 
         string value = expression.Substring(equalsSignAt + 1);

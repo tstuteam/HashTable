@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Commands;
+﻿using Commands;
 using HashTableClass;
 
 namespace App;

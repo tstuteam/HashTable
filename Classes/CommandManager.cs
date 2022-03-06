@@ -8,14 +8,25 @@ public class CommandManager
 {
     private readonly HashTable<string, Command> commands = new();
 
-    public void AddCommand(string name, CommandHandler handler, string description)
+    public void AddCommand(string prototype, CommandHandler handler, string description)
     {
-        name = name.ToLower();
+        prototype = prototype.Trim();
+
+        string name;
+        int nameEnd = prototype.IndexOf(' ');
+
+        if (nameEnd == -1)
+            name = prototype;
+        else
+            name = prototype.Substring(0, nameEnd);
 
         if (CommandExists(name))
-            throw new ArgumentException(nameof(name), "Команда уже существует");
+            throw new ArgumentException(nameof(name), "Команда уже существует.");
 
-        commands[name] = new(handler, description);
+        if (handler == null)
+            throw new ArgumentNullException(nameof(handler), "Обработчик равен `null`.");
+
+        commands[name] = new(handler, prototype, description);
     }
 
     public Command? GetCommand(string name)
@@ -23,7 +34,7 @@ public class CommandManager
         try {
             return commands[name.ToLower()];
         }
-        catch (IndexOutOfRangeException) {
+        catch (ArgumentOutOfRangeException) {
             return null;
         }
     }
@@ -33,13 +44,8 @@ public class CommandManager
         return commands.Exists(name.ToLower());
     }
 
-    public IEnumerator<(string, Command?)> GetCommands()
+    public IEnumerator<(string Name, Command Command)> GetEnumerator()
     {
-        // FIXME: Make it so the return value can be used in a foreach loop.
-
-        foreach (var kv in commands)
-        {
-            yield return kv;
-        }
+        return commands.GetEnumerator()!;
     }
 }

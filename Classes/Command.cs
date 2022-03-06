@@ -4,8 +4,7 @@
 ///     Обработчик команды.
 /// </summary>
 /// <param name="arguments">Аргументы команды.</param>
-/// <returns>Нужно ли вставить перенос строки после выполнения команды.</returns>
-public delegate bool CommandHandler(string arguments);
+public delegate void CommandHandler(string arguments);
 
 /// <summary>
 ///     Класс, содержащий данные о команде.
@@ -34,7 +33,7 @@ public class Command
     /// <param name="prototype">Прототип команды.</param>
     /// <param name="description">Описание команды.</param>
     /// <exception cref="ArgumentNullException">Вызывается, когда обработчик равен `null`.</exception>
-    public Command(CommandHandler handler, string prototype, string description)
+    public Command(string prototype, CommandHandler handler, string description)
     {
         if (handler == null)
             throw new ArgumentNullException(nameof(handler), "Обработчик равен `null`.");
@@ -48,6 +47,5 @@ public class Command
     ///     Вызов команды.
     /// </summary>
     /// <param name="arguments">Аргументы команды.</param>
-    /// <returns>Нужно ли вставить перенос строки после выполнения команды.</returns>
-    public bool Execute(string arguments) => handler(arguments);
+    public void Execute(string arguments) => handler(arguments);
 }

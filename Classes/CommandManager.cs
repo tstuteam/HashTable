@@ -31,7 +31,7 @@ public class CommandManager
         if (handler == null)
             throw new ArgumentNullException(nameof(handler), "Обработчик равен `null`.");
 
-        commands[name] = new(handler, prototype, description);
+        commands[name] = new(prototype, handler, description);
     }
 
     /// <summary>

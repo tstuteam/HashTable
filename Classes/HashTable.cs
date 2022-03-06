@@ -46,12 +46,12 @@ public class HashTable<K, V>
     /// <summary>
     ///     Коэффициент загрузки, при котором массив цепей увеличивается в два раза.
     /// </summary>
-    private readonly float loadFactor = 0.75f;
+    private const float loadFactor = 0.75f;
 
     /// <summary>
     ///     Начальный размер массива цепей.
     /// </summary>
-    private readonly int initialBuckets = 16;
+    private const int initialBuckets = 16;
 
     /// <summary>
     ///     Инициализирует хэш-таблицу.

@@ -44,7 +44,7 @@ static partial class Program
 
         string key = expression.Substring(0, equalsSignAt);
 
-        if (key == "")
+        if (key == string.Empty)
         {
             Console.WriteLine("Ключ не может быть пустым.\n");
             return;

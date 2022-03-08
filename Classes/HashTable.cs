@@ -23,6 +23,11 @@ public class HashTable<K, V>
         public V? Value;
 
         /// <summary>
+        ///     Хэш ключа.
+        /// </summary>
+        public int KeyHash;
+
+        /// <summary>
         ///     Следующий узел.
         /// </summary>
         public HashTableNode? NextNode;
@@ -63,14 +68,13 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    ///     Высчитывает индекс ключа в массиве узлов.
-    ///     Ожидается, что <paramref name="key"/> не `null`.
+    ///     Высчитывает индекс хэша в массиве узлов.
     /// </summary>
-    /// <param name="key">Ключ.</param>
-    /// <returns>Индекс ключа.</returns>
-    private int GetKeyIndex(K key)
+    /// <param name="hash">Хэш.</param>
+    /// <returns>Индекс хэша.</returns>
+    private int GetHashIndex(int hash)
     {
-        int hash = key!.GetHashCode() % numBuckets;
+        hash %= numBuckets;
         return hash >= 0 ? hash : -hash;
     }
 
@@ -90,14 +94,14 @@ public class HashTable<K, V>
             buckets = new HashTableNode[numBuckets];
         }
 
-        int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
+        int bucketIndex = GetHashIndex(keyHash);
 
         HashTableNode? currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
-            if (currentNode.Key!.GetHashCode() == keyHash && currentNode.Key.Equals(key))
+            if (currentNode.KeyHash == keyHash && currentNode.Key!.Equals(key))
             {
                 currentNode.Value = value;
                 break;
@@ -114,13 +118,14 @@ public class HashTable<K, V>
         if (Size / numBuckets >= loadFactor)
         {
             GrowHashTable();
-            bucketIndex = GetKeyIndex(key);
+            bucketIndex = GetHashIndex(keyHash);
         }
 
         HashTableNode newHead = new()
         {
             Key = key,
             Value = value,
+            KeyHash = keyHash,
             NextNode = buckets[bucketIndex]
         };
 
@@ -145,7 +150,7 @@ public class HashTable<K, V>
             {
                 HashTableNode? nextNode = currentNode.NextNode;
 
-                int bucketIndex = GetKeyIndex(currentNode.Key!);
+                int bucketIndex = GetHashIndex(currentNode.KeyHash);
 
                 currentNode.NextNode = buckets[bucketIndex];
                 buckets[bucketIndex] = currentNode;
@@ -168,14 +173,14 @@ public class HashTable<K, V>
         if (buckets == null)
             throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
 
-        int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
+        int bucketIndex = GetHashIndex(keyHash);
 
         HashTableNode? currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
-            if (currentNode.Key!.GetHashCode() == keyHash && currentNode.Key.Equals(key))
+            if (currentNode.KeyHash == keyHash && currentNode.Key!.Equals(key))
                 return currentNode.Value;
 
             currentNode = currentNode.NextNode;
@@ -197,14 +202,14 @@ public class HashTable<K, V>
         if (buckets == null)
             return false;
 
-        int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
+        int bucketIndex = GetHashIndex(keyHash);
 
         HashTableNode? currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
-            if (currentNode.Key!.GetHashCode() == keyHash && currentNode.Key.Equals(key))
+            if (currentNode.KeyHash == keyHash && currentNode.Key!.Equals(key))
                 return true;
 
             currentNode = currentNode.NextNode;
@@ -226,15 +231,15 @@ public class HashTable<K, V>
         if (buckets == null)
             throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
 
-        int bucketIndex = GetKeyIndex(key);
         int keyHash = key.GetHashCode();
+        int bucketIndex = GetHashIndex(keyHash);
 
         HashTableNode? previousNode = null;
         HashTableNode? currentNode = buckets[bucketIndex];
 
         while (currentNode != null)
         {
-            if (currentNode.Key!.GetHashCode() == keyHash && currentNode.Key.Equals(key))
+            if (currentNode.KeyHash == keyHash && currentNode.Key!.Equals(key))
                 break;
 
             previousNode = currentNode;

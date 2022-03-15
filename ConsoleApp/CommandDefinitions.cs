@@ -1,4 +1,6 @@
 ﻿using Commands;
+using HashTableClass;
+using System.Text.Json;
 
 namespace App;
 
@@ -88,6 +90,66 @@ static partial class Program
 
         if (data.Size != 0)
             Console.WriteLine();
+    }
+
+    /// <summary>
+    ///     Вывод всей таблицы в виде JSON.
+    /// </summary>
+    /// <param name="_">Не используется.</param>
+    private static void CommandPrintJson(string _)
+    {
+        string json = JsonSerializer.Serialize(data, new JsonSerializerOptions() {
+            WriteIndented = true,
+            Converters = { new HashTableJsonConverter<string>() }
+        });
+
+        Console.WriteLine("{0}\n", json);
+    }
+
+    /// <summary>
+    ///     Загрузка таблицы из файла.
+    /// </summary>
+    /// <param name="path">Путь к файлу.</param>
+    private static void CommandLoadJson(string path)
+    {
+        path = path.Trim();
+
+        if (path == "")
+        {
+            Console.WriteLine("Требуется путь к файлу: load-json <path>\n");
+            return;
+        }
+
+        string json;
+
+        try
+        {
+            json = File.ReadAllText(path);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex switch
+            {
+                FileNotFoundException or DirectoryNotFoundException => "Файл не найден.\n",
+                PathTooLongException => "Путь слишком длинный.\n",
+                _ => "Не удалось прочитать файл.\n"
+            });
+            return;
+        }
+
+        HashTable<string, string>? table = JsonSerializer.Deserialize<HashTable<string, string>>(json, new JsonSerializerOptions()
+        {
+            Converters = { new HashTableJsonConverter<string>() }
+        });
+
+        if (table == null)
+        {
+            Console.WriteLine("Не удалось прочитать таблицу.\n");
+            return;
+        }
+
+        foreach (var (key, value) in table)
+            data[key] = value;
     }
 
     /// <summary>

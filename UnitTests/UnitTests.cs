@@ -1,5 +1,6 @@
 using Xunit;
 using System;
+using System.Text.Json;
 using HashTableClass;
 
 namespace UnitTests;
@@ -74,5 +75,25 @@ public class UnitTests
         }
 
         Assert.Equal(0, table.Size);
+    }
+
+    [Fact]
+    public void JsonSerializationTest()
+    {
+        JsonSerializerOptions options = new()
+        {
+            Converters = { new HashTableJsonConverter<int>() }
+        };
+
+        HashTable<string, int> numbers1 = sampleTable;
+
+        string json = JsonSerializer.Serialize(numbers1, options);
+        HashTable<string, int>? numbers2 = JsonSerializer.Deserialize<HashTable<string, int>>(json, options);
+
+        Assert.NotNull(numbers2);
+        Assert.Equal(numbers1.Size, numbers2!.Size);
+
+        foreach (var (key, value) in numbers1)
+            Assert.Equal(value, numbers2[key]);
     }
 }

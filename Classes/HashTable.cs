@@ -1,4 +1,7 @@
-﻿namespace HashTableClass;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace HashTableClass;
 
 /// <summary>
 ///     Реализация хэш-таблицы.
@@ -286,5 +289,50 @@ public class HashTable<K, V>
                 node = node.NextNode;
             }
         }
+    }
+}
+
+public class HashTableJsonConverter<V> : JsonConverter<HashTable<string, V>>
+{
+    public override HashTable<string, V>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+            throw new JsonException("Неправильный объект JSON.");
+
+        HashTable<string, V> table = new();
+
+        while (reader.Read())
+        {
+            JsonTokenType tokenType = reader.TokenType;
+
+            if (tokenType == JsonTokenType.EndObject)
+                break;
+
+            if (tokenType != JsonTokenType.PropertyName)
+                throw new JsonException("Неправильный объект JSON.");
+
+            string key = reader.GetString()!;
+
+            reader.Read();
+
+            V? value = JsonSerializer.Deserialize<V>(ref reader, options);
+
+            table[key] = value;
+        }
+
+        return table;
+    }
+
+    public override void Write(Utf8JsonWriter writer, HashTable<string, V> table, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+
+        foreach (var (key, value) in table)
+        {
+            writer.WritePropertyName(key);
+            JsonSerializer.Serialize(writer, value, options);
+        }
+
+        writer.WriteEndObject();
     }
 }

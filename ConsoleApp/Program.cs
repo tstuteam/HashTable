@@ -46,6 +46,8 @@ static partial class Program
         cli.AddCommand("get <key>", CommandGet, "Получить значение из таблицы.");
         cli.AddCommand("del <key>", CommandDel, "Удалить значение из таблицы.");
         cli.AddCommand("print", CommandPrint, "Вывод всей таблицы.");
+        cli.AddCommand("print-json", CommandPrintJson, "Вывод всей таблицы в виде JSON.");
+        cli.AddCommand("load-json <path>", CommandLoadJson, "Загрузка таблицы из файла.");
         cli.AddCommand("exit", CommandExit, "Выход из программы.");
     }
 }

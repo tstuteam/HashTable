@@ -86,6 +86,7 @@ public class HashTable<K, V> : IDictionary<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <param name="value">Значение.</param>
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
     public void Add(K key, V? value)
     {
         if (key == null)
@@ -206,6 +207,7 @@ public class HashTable<K, V> : IDictionary<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>`true` если существует, иначе `false`.</returns>
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
     public bool ContainsKey(K key)
     {
         if (key == null)
@@ -235,6 +237,7 @@ public class HashTable<K, V> : IDictionary<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>`true`, если элемент найден.</returns>
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
     public bool Remove(K key)
     {
         if (key == null)
@@ -276,6 +279,8 @@ public class HashTable<K, V> : IDictionary<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение по ключу.</returns>
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Вызывается, когда ключ не принадлежит таблице.</exception>
     public V this[K key]
     {
         get

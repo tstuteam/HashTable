@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Collections;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace HashTableClass;
 
@@ -62,36 +60,6 @@ public class HashTable<K, V> : IDictionary<K, V>
     ///     Начальный размер массива цепей.
     /// </summary>
     private const int initialBuckets = 16;
-
-    public ICollection<K> Keys
-    {
-        get
-        {
-            K[] keys = new K[Count];
-
-            int i = 0;
-
-            foreach (var (key, value) in this)
-                keys[i++] = key;
-
-            return keys;
-        }
-    }
-
-    public ICollection<V> Values
-    {
-        get
-        {
-            V[] values = new V[Count];
-
-            int i = 0;
-
-            foreach (var (key, value) in this)
-                values[i++] = value;
-
-            return values;
-        }
-    }
 
     /// <summary>
     ///     Инициализирует хэш-таблицу.
@@ -165,17 +133,6 @@ public class HashTable<K, V> : IDictionary<K, V>
         };
 
         buckets[bucketIndex] = newHead;
-    }
-
-    public void Add(KeyValuePair<K, V> kv)
-    {
-        Add(kv.Key, kv.Value);
-    }
-
-    public void Clear()
-    {
-        buckets = null;
-        numBuckets = 0;
     }
 
     /// <summary>
@@ -273,14 +230,6 @@ public class HashTable<K, V> : IDictionary<K, V>
         return false;
     }
 
-    public bool Contains(KeyValuePair<K, V> kv)
-    {
-        if (!TryGetValue(kv.Key, out var value))
-            return false;
-
-        return kv.Value.Equals(value);
-    }
-
     /// <summary>
     ///     Удаляет элемент по ключу.
     /// </summary>
@@ -322,22 +271,6 @@ public class HashTable<K, V> : IDictionary<K, V>
         return true;
     }
 
-    public bool Remove(KeyValuePair<K, V> kv)
-    {
-        return Remove(kv.Key);
-    }
-
-    public void CopyTo(KeyValuePair<K, V>[] array, int index)
-    {
-        foreach (var (key, value) in this)
-            array[index++] = new KeyValuePair<K, V>(key, value);
-    }
-
-    public bool IsReadOnly
-    {
-        get => false;
-    }
-
     /// <summary>
     ///     Индексатор хэш-таблицы.
     /// </summary>
@@ -345,7 +278,8 @@ public class HashTable<K, V> : IDictionary<K, V>
     /// <returns>Значение по ключу.</returns>
     public V this[K key]
     {
-        get {
+        get
+        {
             if (!TryGetValue(key, out V? value))
                 throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит таблице.");
 
@@ -373,7 +307,76 @@ public class HashTable<K, V> : IDictionary<K, V>
         }
     }
 
+    #region ICollection Members
+    public ICollection<K> Keys
+    {
+        get
+        {
+            K[] keys = new K[Count];
+
+            int i = 0;
+
+            foreach (var (key, value) in this)
+                keys[i++] = key;
+
+            return keys;
+        }
+    }
+
+    public ICollection<V> Values
+    {
+        get
+        {
+            V[] values = new V[Count];
+
+            int i = 0;
+
+            foreach (var (key, value) in this)
+                values[i++] = value;
+
+            return values;
+        }
+    }
+
+    public void Clear()
+    {
+        buckets = null;
+        numBuckets = 0;
+    }
+
+    public void Add(KeyValuePair<K, V> kv)
+    {
+        Add(kv.Key, kv.Value);
+    }
+
+    public bool Contains(KeyValuePair<K, V> kv)
+    {
+        if (!TryGetValue(kv.Key, out var value))
+            return false;
+
+        return kv.Value.Equals(value);
+    }
+
+    public bool Remove(KeyValuePair<K, V> kv)
+    {
+        return Remove(kv.Key);
+    }
+
+    public void CopyTo(KeyValuePair<K, V>[] array, int index)
+    {
+        foreach (var (key, value) in this)
+            array[index++] = new KeyValuePair<K, V>(key, value);
+    }
+
+    public bool IsReadOnly
+    {
+        get => false;
+    }
+    #endregion
+
+    #region IEnumerable Members
     IEnumerator IEnumerable.GetEnumerator() {
         return GetEnumerator();
     }
+    #endregion
 }

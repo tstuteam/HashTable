@@ -1,11 +1,14 @@
-﻿namespace HashTableClass;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Collections;
+
+namespace HashTableClass;
 
 /// <summary>
 ///     Реализация хэш-таблицы.
 /// </summary>
 /// <typeparam name="K">Тип ключей.</typeparam>
 /// <typeparam name="V">Тип значений.</typeparam>
-public class HashTable<K, V>
+public class HashTable<K, V> : IDictionary<K, V>
 {
     /// <summary>
     ///     Узел, содержащий данные.
@@ -36,7 +39,7 @@ public class HashTable<K, V>
     /// <summary>
     ///     Количество элементов в хэш-таблице.
     /// </summary>
-    public int Size { private set; get; }
+    public int Count { private set; get; }
 
     /// <summary>
     ///     Количество цепей узлов.
@@ -63,7 +66,7 @@ public class HashTable<K, V>
     /// </summary>
     public HashTable()
     {
-        Size = 0;
+        Count = 0;
         numBuckets = 0;
     }
 
@@ -83,6 +86,7 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <param name="value">Значение.</param>
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
     public void Add(K key, V? value)
     {
         if (key == null)
@@ -113,9 +117,9 @@ public class HashTable<K, V>
         if (currentNode != null)
             return;
 
-        ++Size;
+        ++Count;
 
-        if (Size / numBuckets >= loadFactor)
+        if (Count / numBuckets >= loadFactor)
         {
             GrowHashTable();
             bucketIndex = GetHashIndex(keyHash);
@@ -161,17 +165,22 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    ///     Возвращает элемент по ключу.
+    ///     Пытается получить значение по ключу.
     /// </summary>
     /// <param name="key">Ключ.</param>
-    /// <returns>Значение под ключом.</returns>
-    public V? Get(K key)
+    /// <param name="value">Значение.</param>
+    /// <returns>`true`, если значение было найдено в таблице.</returns>
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
+    public bool TryGetValue(K key, [MaybeNullWhen(false)] out V value)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
 
         if (buckets == null)
-            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+        {
+            value = default;
+            return false;
+        }
 
         int keyHash = key.GetHashCode();
         int bucketIndex = GetHashIndex(keyHash);
@@ -181,12 +190,16 @@ public class HashTable<K, V>
         while (currentNode != null)
         {
             if (currentNode.KeyHash == keyHash && currentNode.Key!.Equals(key))
-                return currentNode.Value;
+            {
+                value = currentNode.Value;
+                return true;
+            }
 
             currentNode = currentNode.NextNode;
         }
 
-        throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+        value = default;
+        return false;
     }
 
     /// <summary>
@@ -194,7 +207,8 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>`true` если существует, иначе `false`.</returns>
-    public bool Exists(K key)
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
+    public bool ContainsKey(K key)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
@@ -219,17 +233,18 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    ///     Удаляет элемент по ключу и возвращает его значение.
+    ///     Удаляет элемент по ключу.
     /// </summary>
     /// <param name="key">Ключ.</param>
-    /// <returns>Значение по ключу.</returns>
-    public V? Remove(K key)
+    /// <returns>`true`, если элемент найден.</returns>
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
+    public bool Remove(K key)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
 
         if (buckets == null)
-            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+            return false;
 
         int keyHash = key.GetHashCode();
         int bucketIndex = GetHashIndex(keyHash);
@@ -247,16 +262,16 @@ public class HashTable<K, V>
         }
 
         if (currentNode == null)
-            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+            return false;
 
-        --Size;
+        --Count;
 
         if (previousNode == null)
             buckets[bucketIndex] = buckets[bucketIndex]!.NextNode;
         else
             previousNode.NextNode = currentNode.NextNode;
 
-        return currentNode.Value;
+        return true;
     }
 
     /// <summary>
@@ -264,9 +279,18 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение по ключу.</returns>
-    public V? this[K key]
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Вызывается, когда ключ не принадлежит таблице.</exception>
+    public V this[K key]
     {
-        get => Get(key);
+        get
+        {
+            if (!TryGetValue(key, out V? value))
+                throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит таблице.");
+
+            return value;
+        }
+
         set => Add(key, value);
     }
 
@@ -274,7 +298,7 @@ public class HashTable<K, V>
     ///     Возвращает перечислитель хэш-таблицы.
     /// </summary>
     /// <returns>Перечислитель.</returns>
-    public IEnumerator<(K Key, V? Value)> GetEnumerator()
+    public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
     {
         for (int i = 0; i < numBuckets; ++i)
         {
@@ -282,9 +306,82 @@ public class HashTable<K, V>
 
             while (node != null)
             {
-                yield return (node.Key!, node.Value);
+                yield return new KeyValuePair<K, V>(node.Key!, node.Value);
                 node = node.NextNode;
             }
         }
     }
+
+    #region ICollection Members
+    public ICollection<K> Keys
+    {
+        get
+        {
+            K[] keys = new K[Count];
+
+            int i = 0;
+
+            foreach (var (key, value) in this)
+                keys[i++] = key;
+
+            return keys;
+        }
+    }
+
+    public ICollection<V> Values
+    {
+        get
+        {
+            V[] values = new V[Count];
+
+            int i = 0;
+
+            foreach (var (key, value) in this)
+                values[i++] = value;
+
+            return values;
+        }
+    }
+
+    public void Clear()
+    {
+        buckets = null;
+        numBuckets = 0;
+    }
+
+    public void Add(KeyValuePair<K, V> kv)
+    {
+        Add(kv.Key, kv.Value);
+    }
+
+    public bool Contains(KeyValuePair<K, V> kv)
+    {
+        if (!TryGetValue(kv.Key, out var value))
+            return false;
+
+        return kv.Value.Equals(value);
+    }
+
+    public bool Remove(KeyValuePair<K, V> kv)
+    {
+        return Remove(kv.Key);
+    }
+
+    public void CopyTo(KeyValuePair<K, V>[] array, int index)
+    {
+        foreach (var (key, value) in this)
+            array[index++] = new KeyValuePair<K, V>(key, value);
+    }
+
+    public bool IsReadOnly
+    {
+        get => false;
+    }
+    #endregion
+
+    #region IEnumerable Members
+    IEnumerator IEnumerable.GetEnumerator() {
+        return GetEnumerator();
+    }
+    #endregion
 }

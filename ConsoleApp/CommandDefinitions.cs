@@ -1,4 +1,6 @@
-﻿using Commands;
+﻿using System.Text.Json;
+using Commands;
+using HashTableClass;
 
 namespace App;
 
@@ -61,8 +63,8 @@ static partial class Program
     /// <param name="key">Ключ значения.</param>
     private static void CommandGet(string key)
     {
-        if (data.Exists(key))
-            Console.WriteLine("{0} = {1}\n", key, data[key]);
+        if (data.TryGetValue(key, out string value))
+            Console.WriteLine("{0} = {1}\n", key, value);
         else
             Console.WriteLine("Запись {0} не существует.\n", key);
     }
@@ -73,8 +75,7 @@ static partial class Program
     /// <param name="key">Ключ значения.</param>
     private static void CommandDel(string key)
     {
-        if (data.Exists(key))
-            data.Remove(key);
+        data.Remove(key);
     }
 
     /// <summary>
@@ -86,8 +87,64 @@ static partial class Program
         foreach (var (key, value) in data)
             Console.WriteLine("{0} = {1}", key, value);
 
-        if (data.Size != 0)
+        if (data.Count != 0)
             Console.WriteLine();
+    }
+
+    /// <summary>
+    ///     Вывод всей таблицы в виде JSON.
+    /// </summary>
+    /// <param name="_">Не используется.</param>
+    private static void CommandPrintJson(string _)
+    {
+        string json = JsonSerializer.Serialize(data, new JsonSerializerOptions() {
+            WriteIndented = true
+        });
+
+        Console.WriteLine("{0}\n", json);
+    }
+
+    /// <summary>
+    ///     Загрузка таблицы из файла.
+    /// </summary>
+    /// <param name="path">Путь к файлу.</param>
+    private static void CommandLoadJson(string path)
+    {
+        path = path.Trim();
+
+        if (path == "")
+        {
+            Console.WriteLine("Требуется путь к файлу: load-json <path>\n");
+            return;
+        }
+
+        string json;
+
+        try
+        {
+            json = File.ReadAllText(path);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex switch
+            {
+                FileNotFoundException or DirectoryNotFoundException => "Файл не найден.\n",
+                PathTooLongException => "Путь слишком длинный.\n",
+                _ => "Не удалось прочитать файл.\n"
+            });
+            return;
+        }
+
+        HashTable<string, string>? table = JsonSerializer.Deserialize<HashTable<string, string>>(json);
+
+        if (table == null)
+        {
+            Console.WriteLine("Не удалось прочитать таблицу.\n");
+            return;
+        }
+
+        foreach (var (key, value) in table)
+            data[key] = value;
     }
 
     /// <summary>

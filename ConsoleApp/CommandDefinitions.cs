@@ -63,8 +63,8 @@ static partial class Program
     /// <param name="key">Ключ значения.</param>
     private static void CommandGet(string key)
     {
-        if (data.Exists(key))
-            Console.WriteLine("{0} = {1}\n", key, data[key]);
+        if (data.TryGetValue(key, out string value))
+            Console.WriteLine("{0} = {1}\n", key, value);
         else
             Console.WriteLine("Запись {0} не существует.\n", key);
     }
@@ -75,8 +75,7 @@ static partial class Program
     /// <param name="key">Ключ значения.</param>
     private static void CommandDel(string key)
     {
-        if (data.Exists(key))
-            data.Remove(key);
+        data.Remove(key);
     }
 
     /// <summary>
@@ -88,7 +87,7 @@ static partial class Program
         foreach (var (key, value) in data)
             Console.WriteLine("{0} = {1}", key, value);
 
-        if (data.Size != 0)
+        if (data.Count != 0)
             Console.WriteLine();
     }
 
@@ -99,8 +98,7 @@ static partial class Program
     private static void CommandPrintJson(string _)
     {
         string json = JsonSerializer.Serialize(data, new JsonSerializerOptions() {
-            WriteIndented = true,
-            Converters = { new HashTableJsonConverter<string>() }
+            WriteIndented = true
         });
 
         Console.WriteLine("{0}\n", json);
@@ -137,10 +135,7 @@ static partial class Program
             return;
         }
 
-        HashTable<string, string>? table = JsonSerializer.Deserialize<HashTable<string, string>>(json, new JsonSerializerOptions()
-        {
-            Converters = { new HashTableJsonConverter<string>() }
-        });
+        HashTable<string, string>? table = JsonSerializer.Deserialize<HashTable<string, string>>(json);
 
         if (table == null)
         {

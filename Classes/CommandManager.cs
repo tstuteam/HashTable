@@ -71,15 +71,15 @@ public class CommandManager
     /// <returns>`true` если команда существует.</returns>
     public bool CommandExists(string name)
     {
-        return commands.Exists(name.ToLower());
+        return commands.ContainsKey(name.ToLower());
     }
 
     /// <summary>
     ///     Возвращает перечислитель существующих команд.
     /// </summary>
     /// <returns>Перечислитель.</returns>
-    public IEnumerator<(string Name, Command Command)> GetEnumerator()
+    public IEnumerator<KeyValuePair<string, Command>> GetEnumerator()
     {
-        return commands.GetEnumerator()!;
+        return commands.GetEnumerator();
     }
 }

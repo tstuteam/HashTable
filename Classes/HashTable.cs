@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Collections;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace HashTableClass;
@@ -8,7 +10,7 @@ namespace HashTableClass;
 /// </summary>
 /// <typeparam name="K">Тип ключей.</typeparam>
 /// <typeparam name="V">Тип значений.</typeparam>
-public class HashTable<K, V>
+public class HashTable<K, V> : IDictionary<K, V>
 {
     /// <summary>
     ///     Узел, содержащий данные.
@@ -39,7 +41,7 @@ public class HashTable<K, V>
     /// <summary>
     ///     Количество элементов в хэш-таблице.
     /// </summary>
-    public int Size { private set; get; }
+    public int Count { private set; get; }
 
     /// <summary>
     ///     Количество цепей узлов.
@@ -61,12 +63,42 @@ public class HashTable<K, V>
     /// </summary>
     private const int initialBuckets = 16;
 
+    public ICollection<K> Keys
+    {
+        get
+        {
+            K[] keys = new K[Count];
+
+            int i = 0;
+
+            foreach (var (key, value) in this)
+                keys[i++] = key;
+
+            return keys;
+        }
+    }
+
+    public ICollection<V> Values
+    {
+        get
+        {
+            V[] values = new V[Count];
+
+            int i = 0;
+
+            foreach (var (key, value) in this)
+                values[i++] = value;
+
+            return values;
+        }
+    }
+
     /// <summary>
     ///     Инициализирует хэш-таблицу.
     /// </summary>
     public HashTable()
     {
-        Size = 0;
+        Count = 0;
         numBuckets = 0;
     }
 
@@ -116,9 +148,9 @@ public class HashTable<K, V>
         if (currentNode != null)
             return;
 
-        ++Size;
+        ++Count;
 
-        if (Size / numBuckets >= loadFactor)
+        if (Count / numBuckets >= loadFactor)
         {
             GrowHashTable();
             bucketIndex = GetHashIndex(keyHash);
@@ -133,6 +165,17 @@ public class HashTable<K, V>
         };
 
         buckets[bucketIndex] = newHead;
+    }
+
+    public void Add(KeyValuePair<K, V> kv)
+    {
+        Add(kv.Key, kv.Value);
+    }
+
+    public void Clear()
+    {
+        buckets = null;
+        numBuckets = 0;
     }
 
     /// <summary>
@@ -164,17 +207,22 @@ public class HashTable<K, V>
     }
 
     /// <summary>
-    ///     Возвращает элемент по ключу.
+    ///     Пытается получить значение по ключу.
     /// </summary>
     /// <param name="key">Ключ.</param>
-    /// <returns>Значение под ключом.</returns>
-    public V? Get(K key)
+    /// <param name="value">Значение.</param>
+    /// <returns>`true`, если значение было найдено в таблице.</returns>
+    /// <exception cref="ArgumentNullException">Вызывается, когда ключ имеет значение `null`.</exception>
+    public bool TryGetValue(K key, [MaybeNullWhen(false)] out V value)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
 
         if (buckets == null)
-            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+        {
+            value = default;
+            return false;
+        }
 
         int keyHash = key.GetHashCode();
         int bucketIndex = GetHashIndex(keyHash);
@@ -184,12 +232,16 @@ public class HashTable<K, V>
         while (currentNode != null)
         {
             if (currentNode.KeyHash == keyHash && currentNode.Key!.Equals(key))
-                return currentNode.Value;
+            {
+                value = currentNode.Value;
+                return true;
+            }
 
             currentNode = currentNode.NextNode;
         }
 
-        throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+        value = default;
+        return false;
     }
 
     /// <summary>
@@ -197,7 +249,7 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>`true` если существует, иначе `false`.</returns>
-    public bool Exists(K key)
+    public bool ContainsKey(K key)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
@@ -221,18 +273,26 @@ public class HashTable<K, V>
         return false;
     }
 
+    public bool Contains(KeyValuePair<K, V> kv)
+    {
+        if (!TryGetValue(kv.Key, out var value))
+            return false;
+
+        return kv.Value.Equals(value);
+    }
+
     /// <summary>
-    ///     Удаляет элемент по ключу и возвращает его значение.
+    ///     Удаляет элемент по ключу.
     /// </summary>
     /// <param name="key">Ключ.</param>
-    /// <returns>Значение по ключу.</returns>
-    public V? Remove(K key)
+    /// <returns>`true`, если элемент найден.</returns>
+    public bool Remove(K key)
     {
         if (key == null)
             throw new ArgumentNullException(nameof(key), "Ключ не может иметь значение null.");
 
         if (buckets == null)
-            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+            return false;
 
         int keyHash = key.GetHashCode();
         int bucketIndex = GetHashIndex(keyHash);
@@ -250,16 +310,32 @@ public class HashTable<K, V>
         }
 
         if (currentNode == null)
-            throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит хэш-таблице.");
+            return false;
 
-        --Size;
+        --Count;
 
         if (previousNode == null)
             buckets[bucketIndex] = buckets[bucketIndex]!.NextNode;
         else
             previousNode.NextNode = currentNode.NextNode;
 
-        return currentNode.Value;
+        return true;
+    }
+
+    public bool Remove(KeyValuePair<K, V> kv)
+    {
+        return Remove(kv.Key);
+    }
+
+    public void CopyTo(KeyValuePair<K, V>[] array, int index)
+    {
+        foreach (var (key, value) in this)
+            array[index++] = new KeyValuePair<K, V>(key, value);
+    }
+
+    public bool IsReadOnly
+    {
+        get => false;
     }
 
     /// <summary>
@@ -267,9 +343,15 @@ public class HashTable<K, V>
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Значение по ключу.</returns>
-    public V? this[K key]
+    public V this[K key]
     {
-        get => Get(key);
+        get {
+            if (!TryGetValue(key, out V? value))
+                throw new ArgumentOutOfRangeException(nameof(key), "Ключ не принадлежит таблице.");
+
+            return value;
+        }
+
         set => Add(key, value);
     }
 
@@ -277,7 +359,7 @@ public class HashTable<K, V>
     ///     Возвращает перечислитель хэш-таблицы.
     /// </summary>
     /// <returns>Перечислитель.</returns>
-    public IEnumerator<(K Key, V? Value)> GetEnumerator()
+    public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
     {
         for (int i = 0; i < numBuckets; ++i)
         {
@@ -285,54 +367,13 @@ public class HashTable<K, V>
 
             while (node != null)
             {
-                yield return (node.Key!, node.Value);
+                yield return new KeyValuePair<K, V>(node.Key!, node.Value);
                 node = node.NextNode;
             }
         }
     }
-}
 
-public class HashTableJsonConverter<V> : JsonConverter<HashTable<string, V>>
-{
-    public override HashTable<string, V>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        if (reader.TokenType != JsonTokenType.StartObject)
-            throw new JsonException("Неправильный объект JSON.");
-
-        HashTable<string, V> table = new();
-
-        while (reader.Read())
-        {
-            JsonTokenType tokenType = reader.TokenType;
-
-            if (tokenType == JsonTokenType.EndObject)
-                break;
-
-            if (tokenType != JsonTokenType.PropertyName)
-                throw new JsonException("Неправильный объект JSON.");
-
-            string key = reader.GetString()!;
-
-            reader.Read();
-
-            V? value = JsonSerializer.Deserialize<V>(ref reader, options);
-
-            table[key] = value;
-        }
-
-        return table;
-    }
-
-    public override void Write(Utf8JsonWriter writer, HashTable<string, V> table, JsonSerializerOptions options)
-    {
-        writer.WriteStartObject();
-
-        foreach (var (key, value) in table)
-        {
-            writer.WritePropertyName(key);
-            JsonSerializer.Serialize(writer, value, options);
-        }
-
-        writer.WriteEndObject();
+    IEnumerator IEnumerable.GetEnumerator() {
+        return GetEnumerator();
     }
 }

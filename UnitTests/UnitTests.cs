@@ -47,9 +47,9 @@ public class UnitTests
     {
         HashTable<string, int> table = new();
 
-        Assert.False(table.Exists("abc"));
+        Assert.False(table.ContainsKey("abc"));
         table["abc"] = 123;
-        Assert.True(table.Exists("abc"));
+        Assert.True(table.ContainsKey("abc"));
 
         table["abc"] = 321;
 
@@ -66,7 +66,7 @@ public class UnitTests
             table[key] = key.GetHashCode();
         }
 
-        Assert.Equal(1_000_000, table.Size);
+        Assert.Equal(1_000_000, table.Count);
 
         for (int i = 0; i < 1_000_000; ++i)
         {
@@ -74,24 +74,19 @@ public class UnitTests
             table.Remove(key);
         }
 
-        Assert.Equal(0, table.Size);
+        Assert.Empty(table);
     }
 
     [Fact]
     public void JsonSerializationTest()
     {
-        JsonSerializerOptions options = new()
-        {
-            Converters = { new HashTableJsonConverter<int>() }
-        };
-
         HashTable<string, int> numbers1 = sampleTable;
 
-        string json = JsonSerializer.Serialize(numbers1, options);
-        HashTable<string, int>? numbers2 = JsonSerializer.Deserialize<HashTable<string, int>>(json, options);
+        string json = JsonSerializer.Serialize(numbers1);
+        HashTable<string, int>? numbers2 = JsonSerializer.Deserialize<HashTable<string, int>>(json);
 
         Assert.NotNull(numbers2);
-        Assert.Equal(numbers1.Size, numbers2!.Size);
+        Assert.Equal(numbers1.Count, numbers2!.Count);
 
         foreach (var (key, value) in numbers1)
             Assert.Equal(value, numbers2[key]);
